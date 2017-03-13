@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- namespace命名空间，作用就是对sql进行分类化管理，理解sql隔离 
+注意：使用mapper代理方法开发，namespace有特殊重要的作用
+-->
+
+<mapper namespace="test">
+
+	<!-- 在 映射文件中配置很多sql语句 -->
+	<!-- 需求：通过id查询用户表的记录 -->
+	<!-- 通过 select执行数据库查询
+	id：标识 映射文件中的 sql
+	将sql语句封装到mappedStatement对象中，所以将id称为statement的id
+	parameterType：指定输入 参数的类型，这里指定int型 
+	#{}表示一个占位符号
+	#{id}：其中的id表示接收输入 的参数，参数名称就是id，如果输入 参数是简单类型，#{}中的参数名可以任意，可以value或其它名称
+	
+	resultType：指定sql输出结果 的所映射的java对象类型，select指定resultType表示将单条记录映射成的java对象。
+	 -->
+	<select id="findUserById" parameterType="int" resultType="com.leo.mybatis.po.User">
+		SELECT * FROM USER WHERE id=#{value}
+	</select>
+	<!-- 根据用户名模糊查询 ,可能返回多条
+	resultType:指定的是单条记录所映射的Java对象类型-->
+	<select id="findUserByName" parameterType="String" resultType="com.leo.mybatis.po.User">
+	<!-- ${}:表示拼接sql串，将接收到参数的内容不加修饰的添加到sql串
+	     会有安全隐患：引起SQL注入
+	     ${value}:接收传入参数的类型，如果是简单类型，只能使用value -->
+	    select * from user where username like '%${value}%'
+	</select>
+	<!-- 添加用户 -->
+	<insert id="insertUser" parameterType="com.leo.mybatis.po.User">
+	    <!-- 将insert插入对象的主键返回 
+	         select last_insert_id()  得到刚插入的用户的主键值，只适用于自增长
+	         keyProperty   将查询到的值设置到parametertype指定的对象的属性
+	         order：       执行顺序，相对于insert语句来说
+	    -->
+	    <selectKey keyProperty="id" order="AFTER" resultType="int">
+	       select last_insert_id()
+	    </selectKey>
+	    insert into user(username,birthday,sex,address) value(#{username},#{birthday},#{sex},#{address})
+	</insert>
+	<!-- 根据id删除用户 -->
+	<delete id="deleteUser" parameterType="int">
+	    delete from user where id=#{value}
+	</delete>
+	<!-- 更新用户  id必须存在 
+	     #{id}: 从输入user对象中获取id值 -->
+	<update id="updateUser" parameterType="com.leo.mybatis.po.User">
+	    update user set username=#{username},birthday=#{birthday},sex=#{sex},address=#{address} where id=#{id}
+	</update>
+</mapper>
+
+

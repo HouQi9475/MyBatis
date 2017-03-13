@@ -1,0 +1,22 @@
+mybatis是一个持久层框架，是Apache下的顶级项目
+mybatis让程序将主要精力放到SQL上，通过提供的映射方式，自由灵活的生成（半自动化）满足需求的sql语句
+mybatis可以将向preparedstatement输入的参数自动进行输入映射，将查询结果灵活的映射成java对象。
+核心（输入映射，输出映射）
+
+       sqlMapConfig.xml(是mybatis的全局配置文件)：配置数据源，事务等mybatis运行环境
+       mapper.xml..mapper.xml...mapper.xml.....   映射关系(配置sql语句)
+       
+       sqlSessionFactory 会话工厂    ： 创建sqlsession（根据配置文件）
+       
+       sqlSession 会话   : 操作数据库  增删改查    是一个接口，面向用户的接口
+       
+       Executor(执行器) 通过执行器操作数据库     也是一个接口（两个实现   基本执行器，缓存执行器）
+       
+       mapped statement(底层封装对象) 对操作数据库存储封装 	，包括sql语句，输入参数，输出结果类型
+       
+                    连接mysql
+                   
+      
+mybatis开发
+   1，导入jar包
+             
