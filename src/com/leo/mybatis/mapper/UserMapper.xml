@@ -20,19 +20,19 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	
 	resultType：指定sql输出结果 的所映射的java对象类型，select指定resultType表示将单条记录映射成的java对象。
 	 -->
-	<select id="findUserById" parameterType="int" resultType="com.leo.mybatis.po.User">
+	<select id="findUserById" parameterType="int" resultType="User">
 		SELECT * FROM USER WHERE id=#{value}
 	</select>
 	<!-- 根据用户名模糊查询 ,可能返回多条
 	resultType:指定的是单条记录所映射的Java对象类型-->
-	<select id="findUserByName" parameterType="String" resultType="com.leo.mybatis.po.User">
+	<select id="findUserByName" parameterType="String" resultType="User">
 	<!-- ${}:表示拼接sql串，将接收到参数的内容不加修饰的添加到sql串
 	     会有安全隐患：引起SQL注入
 	     ${value}:接收传入参数的类型，如果是简单类型，只能使用value -->
 	    select * from user where username like '%${value}%'
 	</select>
 	<!-- 添加用户 -->
-	<insert id="insertUser" parameterType="com.leo.mybatis.po.User">
+	<insert id="insertUser" parameterType="User">
 	    <!-- 将insert插入对象的主键返回 
 	         select last_insert_id()  得到刚插入的用户的主键值，只适用于自增长
 	         keyProperty   将查询到的值设置到parametertype指定的对象的属性
@@ -49,7 +49,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 	</delete>
 	<!-- 更新用户  id必须存在 
 	     #{id}: 从输入user对象中获取id值 -->
-	<update id="updateUser" parameterType="com.leo.mybatis.po.User">
+	<update id="updateUser" parameterType="User">
 	    update user set username=#{username},birthday=#{birthday},sex=#{sex},address=#{address} where id=#{id}
 	</update>
 </mapper>
