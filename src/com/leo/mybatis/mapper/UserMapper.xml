@@ -3,54 +3,98 @@
 PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<!-- namespace命名空间，作用就是对sql进行分类化管理，理解sql隔离 
-注意：使用mapper代理方法开发，namespace有特殊重要的作用,在mapper.xml中namespace等于mapper接口的地址
--->
+<!-- namespace命名空间，作用就是对sql进行分类化管理，理解sql隔离 注意：使用mapper代理方法开发，namespace有特殊重要的作用,在mapper.xml中namespace等于mapper接口的地址 -->
 
 <mapper namespace="com.leo.mybatis.mapper.UserMapper">
-
+	<!-- 配置resultMap 如果sql查询字段名和pojo的属性名不一致，可以通过resultMap将字段名和属性名作一个对应关系 ，resultMap实质上还需要将查询结果映射到pojo对象中。 
+		resultMap可以实现将查询结果映射为复杂类型的pojo，比如在查询结果映射对象中包括pojo和list实现一对一查询和一对多查询。 -->
+	<resultMap type="user" id="userResultMap">
+		<!-- id:此属性表示查询结果集的唯一标识，非常重要。如果是多个字段为复合唯一约束则定义多个<id />。 Property：表示user类的属性。 
+			Column：表示sql查询出来的字段名。 Column和property放在一块儿表示将sql查询出来的字段映射到指定的pojo类属性上。 -->
+		<id column="id_" property="id" />
+		<!-- <result />：普通结果，即pojo的属性。 -->
+		<result column="username_" property="username" />
+	</resultMap>
+	<!-- 定义SQL片段，Sql中可将重复的sql提取出来，使用时用include引用即可，最终达到sql重用的目的 -->
+	<sql id="query_user">
+	    <if test="ids!=null and ids!=''">
+	    <!--collection:输入指定对象中集合属性  
+	        item:每次遍历生成的对象
+	        open/close:开始和结束遍历时生成的字符串
+	        separator：遍历的两个对象中需要拼接的串
+	        实现如下SQL拼接：
+	        and (id=1 or id=2 or id=3)
+	        -->
+	       <foreach collection="ids" item="user_id" open="and (" close=")" separator="or">
+	           id=#{user_id}
+	       </foreach>
+	    </if>
+	    <if test="userCustom!=null">
+				<if test="userCustom.sex!=null and userCustom.sex!=''">
+					and user.sex=#{userCustom.sex}
+				</if>
+				<if test="userCustom.username !=null and userCustom.username!='' ">
+					and user.username like '%${userCustom.username}%'
+				</if>
+			</if>
+	</sql>
+	<!-- 查询用户列表，用户信息综合查询 ,通过resultMap返回 -->
+	<select id="findUserListByResultMap" parameterType="UserQueryVo"
+		resultMap="userResultMap">
+		select * from user
+		<where>
+			<!-- 通过include引入SQL片段，如果引入其他xml的片段前面需加包名. -->
+			<include refid="query_user"></include>
+			<!-- 可以引入其他的SQL片段 -->
+		</where>
+	</select>
+	<!-- 查询用户列表，根据用户性别和用户名称查询列表 .用户信息综合查询 -->
+	<select id="findUserList" parameterType="UserQueryVo"
+		resultType="UserCustom">
+		select * from user
+		<!--普通查询 select * from user where user.sex=#{userCustom.sex} and user.username 
+			like '%${userCustom.username}%' -->
+		<!-- 通过判断动态拼接SQL where 可以自动去掉条件中的第一个and -->
+		<where>
+			<!-- 通过include引入SQL片段 -->
+			<include refid="query_user"></include>
+		</where>
+	</select>
 	<!-- 在 映射文件中配置很多sql语句 -->
 	<!-- 需求：通过id查询用户表的记录 -->
-	<!-- 通过 select执行数据库查询
-	id：标识 映射文件中的 sql
-	将sql语句封装到mappedStatement对象中，所以将id称为statement的id
-	parameterType：指定输入 参数的类型，这里指定int型 
-	#{}表示一个占位符号
-	#{id}：其中的id表示接收输入 的参数，参数名称就是id，如果输入 参数是简单类型，#{}中的参数名可以任意，可以value或其它名称
-	
-	resultType：指定sql输出结果 的所映射的java对象类型，select指定resultType表示将单条记录映射成的java对象。
-	 -->
+	<!-- 通过 select执行数据库查询 id：标识 映射文件中的 sql 将sql语句封装到mappedStatement对象中，所以将id称为statement的id 
+		parameterType：指定输入 参数的类型，这里指定int型 #{}表示一个占位符号 #{id}：其中的id表示接收输入 的参数，参数名称就是id，如果输入 
+		参数是简单类型，#{}中的参数名可以任意，可以value或其它名称 resultType：指定sql输出结果 的所映射的java对象类型，select指定resultType表示将单条记录映射成的java对象。 -->
 	<select id="findUserById" parameterType="int" resultType="User">
-		SELECT * FROM USER WHERE id=#{value}
+		SELECT
+		* FROM USER WHERE id=#{value}
 	</select>
-	<!-- 根据用户名模糊查询 ,可能返回多条
-	resultType:指定的是单条记录所映射的Java对象类型-->
+	<!-- 根据用户名模糊查询 ,可能返回多条 resultType:指定的是单条记录所映射的Java对象类型 -->
 	<select id="findUserByName" parameterType="String" resultType="User">
-	<!-- ${}:表示拼接sql串，将接收到参数的内容不加修饰的添加到sql串
-	     会有安全隐患：引起SQL注入
-	     ${value}:接收传入参数的类型，如果是简单类型，只能使用value -->
-	    select * from user where username like '%${value}%'
+		<!-- ${}:表示拼接sql串，将接收到参数的内容不加修饰的添加到sql串 会有安全隐患：引起SQL注入 ${value}:接收传入参数的类型，如果是简单类型，只能使用value -->
+		select * from user where username like '%${value}%'
 	</select>
 	<!-- 添加用户 -->
 	<insert id="insertUser" parameterType="User">
-	    <!-- 将insert插入对象的主键返回 
-	         select last_insert_id()  得到刚插入的用户的主键值，只适用于自增长
-	         keyProperty   将查询到的值设置到parametertype指定的对象的属性
-	         order：       执行顺序，相对于insert语句来说
-	    -->
-	    <selectKey keyProperty="id" order="AFTER" resultType="int">
-	       select last_insert_id()
-	    </selectKey>
-	    insert into user(username,birthday,sex,address) value(#{username},#{birthday},#{sex},#{address})
+		<!-- 将insert插入对象的主键返回 select last_insert_id() 得到刚插入的用户的主键值，只适用于自增长 keyProperty 
+			将查询到的值设置到parametertype指定的对象的属性 order： 执行顺序，相对于insert语句来说 -->
+		<selectKey keyProperty="id" order="AFTER" resultType="int">
+			select
+			last_insert_id()
+		</selectKey>
+		insert into user(username,birthday,sex,address)
+		value(#{username},#{birthday},#{sex},#{address})
 	</insert>
 	<!-- 根据id删除用户 -->
 	<delete id="deleteUser" parameterType="int">
-	    delete from user where id=#{value}
+		delete from user where
+		id=#{value}
 	</delete>
-	<!-- 更新用户  id必须存在 
-	     #{id}: 从输入user对象中获取id值 -->
+	<!-- 更新用户 id必须存在 #{id}: 从输入user对象中获取id值 -->
 	<update id="updateUser" parameterType="User">
-	    update user set username=#{username},birthday=#{birthday},sex=#{sex},address=#{address} where id=#{id}
+		update user set
+		username=#{username},birthday=#{birthday},sex=#{sex},address=#{address}
+		where id=#{id}
 	</update>
 </mapper>
 

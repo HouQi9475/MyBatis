@@ -30,7 +30,9 @@ PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
 	</environments>
 	<!-- 加载映射文件 -->
 	<mappers>
-	   <mapper class="com.leo.mybatis.mapper.UserMapper"/>
+	  <!--  <mapper class="com.leo.mybatis.mapper.UserMapper"/> -->
+	  <!-- 使用包名注册指定包下的所有接口 -->
+	  <package name="com.leo.mybatis.mapper"/>
 	</mappers>
 	
 </configuration>
