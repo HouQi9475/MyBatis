@@ -1,0 +1,136 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- namespace命名空间，作用就是对sql进行分类化管理，理解sql隔离 注意：使用mapper代理方法开发，namespace有特殊重要的作用,在mapper.xml中namespace等于mapper接口的地址 -->
+
+<mapper namespace="com.leo.mybatis.mapper.OrdersMapperCustom">
+
+	<!-- 编写sql语句，查询订单关联查询用户信息 -->
+	<select id="findUserByOrders" resultType="com.leo.mybatis.po.OrdersCustom">
+		select orders.*,user.username,user.sex,user.address from orders ,user where
+		orders.user_id=user.id;
+	</select>
+	<!-- 编写sql语句，查询订单关联查询用户信息,用resultMap返回Orders类 -->
+	<select id="findUserByOrdersResultMap" resultMap="ordersUserResultMap">
+		select orders.*,user.username,user.sex,user.address from orders ,user where
+		orders.user_id=user.id;
+	</select>
+
+
+	<!--resultMap可以实现将查询结果映射为复杂类型的pojo，比如在查询结果映射对象中包括pojo和list实现一对一查询和一对多查询。 -->
+	<resultMap type="orders" id="ordersUserResultMap">
+		<!-- id:此属性表示查询结果集的唯一标识，非常重要。如果是多个字段为复合唯一约束则定义多个<id />。 Property：表示orders类的属性。 
+			Column：表示sql查询出来的字段名。 Column和property放在一块儿表示将sql查询出来的字段映射到指定的pojo类属性上。 -->
+		<id column="id" property="id" />
+		<!-- <result />：普通结果，即pojo的属性。 -->
+		<result column="user_id" property="userId" />
+		<result column="number" property="number" />
+		<result column="createtime" property="createtime" />
+		<result column="note" property="note" />
+		<!-- association：表示进行关联查询单条记录 property：表示关联查询的结果存储在cn.itcast.mybatis.po.Orders的user属性中 
+			javaType：表示关联查询的结果类型 -->
+		<association property="user" javaType="com.leo.mybatis.po.User">
+			<!-- id:关联查询用户的唯一标识 orderｓ表中的user_id column：指定唯一标识用户信息的列 property:对应user中的哪个属性 
+				查询结果的user_id列对应关联对象的id属性，这里是<id />表示user_id是关联查询对象的唯一标识。 -->
+			<id column="user_id" property="id" />
+			<result column="username" property="username" />
+			<result column="sex" property="sex" />
+			<result column="address" property="address" />
+		</association>
+	</resultMap>
+	<!-- 查询订单关联用户及订单详情 -->
+	<resultMap type="orders" id="ordersAndOrderdetailResultMap"
+		extends="ordersUserResultMap">
+		<!-- 订单信息 -->
+		<!-- 用户信息 -->
+		<!-- 通过继承ordersUserResultMap，不需要再次编写 -->
+		<!-- 订单详情 由于订单和订单详情是1对多，所以使用collection来映射 collection：对关联查询到的多条记录映射到集合对象中 
+			property：要映射到的POJO中所对应的属性 ofType:指定映射到集合中的对象类型 -->
+		<collection property="orderdetails" ofType="com.leo.mybatis.po.Orderdetail">
+			<!-- 该id为订单明细唯一标识，即重命名的ordersdetail_id property：为该类型中所对应的值 即 com.leo.mybatis.po.Orderdetail中的id -->
+			<id column="" property="id" />
+			<result column="items_id" property="itemsId" />
+			<result column="items_num" property="itemsNum" />
+			<result column="orders_id " property="ordersId" />
+		</collection>
+	</resultMap>
+	<select id="findOrderAndOrderdetailByResultMap" resultMap="ordersAndOrderdetailResultMap">
+		select
+		orders.*,
+		user.username,user.sex,user.address,
+		orderdetail.id ordersdetail_id,
+		orderdetail.items_id,
+		orderdetail.items_num,orderdetail.orders_id
+		from
+		orders,user,orderdetail
+		where
+		orders.user_id=user.id and orderdetail.orders_id=orders.id;
+	</select>
+	<!-- 查询用户购买的商品信息，多对多 -->
+	<resultMap type="com.leo.mybatis.po.User" id="UserAndItemsByResultMap">
+	<!-- 用户信息 -->
+	<id column="user_id" property="id"/>
+	<result column="username" property="username"/>
+	<result column="sex" property="sex"/>
+	<result column="address" property="address"/>
+	    <!-- 订单信息:1对多，用collection -->
+	    <collection property="orders" ofType="com.leo.mybatis.po.Orders">
+	        <id column="id" property="id"/>
+	        <result column="user_id" property="userId"/>
+	        <result column="number" property="number"/>
+	        <result column="createtime" property="createtime"/>
+	        <result column="note" property="note"/>
+	        <!-- 订单项：1对多，也是用collection -->
+	        <collection property="orderdetails" ofType="com.leo.mybatis.po.Orderdetail">
+	           <id column="ordersdetail_id" property="id"/>
+	           <result column="items_id" property="itemsId"/>
+	           <result column="items_num" property="itemsNum"/>
+	           <result column="orders_id" property="ordersId"/>
+	           <!-- 商品列表: 1对1 使用 association-->
+	           <association property="items" javaType="com.leo.mybatis.po.Items">
+	               <id column="items_id" property="id"/>
+	               <result column="items_name" property="name"/>
+	               <result column="items_detail" property="detail"/>
+	           </association>
+	        </collection>
+	    </collection>
+	</resultMap>
+	<select id="findUserAndItemsByResultMap" resultMap="UserAndItemsByResultMap">
+		select orders.*,
+			user.username,user.sex,user.address,
+			orderdetail.id ordersdetail_id,
+			orderdetail.items_id,orderdetail.items_num,orderdetail.orders_id ,
+			items.id,items.id items_id,items.name items_name,items.detail
+			items_detail
+		from
+			orders,user,orderdetail,items
+		where
+			orders.user_id=user.id and orderdetail.orders_id=orders.id and
+		orderdetail.items_id=items.id;
+	</select>
+	<!-- 延迟加载 -->
+	<resultMap type="com.leo.mybatis.po.Orders" id="OrderAndUserLazyLoadingResultMap">
+	     <id column="id" property="id" />
+		<!-- <result />：普通结果，即pojo的属性。 -->
+		<result column="user_id" property="userId" />
+		<result column="number" property="number" />
+		<result column="createtime" property="createtime" />
+		<result column="note" property="note" />
+		<!-- association：表示进行关联查询单条记录 property：表示关联查询的结果存储在cn.itcast.mybatis.po.Orders的user属性中 
+			javaType：表示关联查询的结果类型 
+			select:指定关联查询sql为com.leo.mybatis.mapper.UserMapper.findUserById
+			column:关联查询时将users_id列的值传入findUserById
+			最后将关联查询结果映射至com.leo.mybatis.po.User。-->
+		<association property="user" javaType="com.leo.mybatis.po.User"
+		select="com.leo.mybatis.mapper.UserMapper.findUserById" column="user_id">
+			
+		</association>
+	</resultMap>
+	<select id="findOrderAndUserLazyLoading" resultMap="OrderAndUserLazyLoadingResultMap">
+	     select * from orders;
+	</select>
+</mapper>
+
+
