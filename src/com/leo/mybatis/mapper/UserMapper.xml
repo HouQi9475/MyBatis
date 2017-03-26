@@ -6,6 +6,10 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 <!-- namespace命名空间，作用就是对sql进行分类化管理，理解sql隔离 注意：使用mapper代理方法开发，namespace有特殊重要的作用,在mapper.xml中namespace等于mapper接口的地址 -->
 
 <mapper namespace="com.leo.mybatis.mapper.UserMapper">
+    <!-- 开启本mapper的namespace的二级缓存 
+         type:为ehcache实现cache接口的实现类
+    -->
+    <cache type="org.mybatis.caches.ehcache.EhcacheCache"/>
 	<!-- 配置resultMap 如果sql查询字段名和pojo的属性名不一致，可以通过resultMap将字段名和属性名作一个对应关系 ，resultMap实质上还需要将查询结果映射到pojo对象中。 
 		resultMap可以实现将查询结果映射为复杂类型的pojo，比如在查询结果映射对象中包括pojo和list实现一对一查询和一对多查询。 -->
 	<resultMap type="user" id="userResultMap">

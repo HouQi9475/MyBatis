@@ -102,8 +102,7 @@ PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
 			user.username,user.sex,user.address,
 			orderdetail.id ordersdetail_id,
 			orderdetail.items_id,orderdetail.items_num,orderdetail.orders_id ,
-			items.id,items.id items_id,items.name items_name,items.detail
-			items_detail
+			items.id,items.id items_id,items.name items_name,items.detail items_detail
 		from
 			orders,user,orderdetail,items
 		where

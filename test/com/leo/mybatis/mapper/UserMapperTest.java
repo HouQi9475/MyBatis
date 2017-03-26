@@ -75,4 +75,49 @@ public class UserMapperTest {
 		List<UserCustom> list=(List<UserCustom>) userMapper.findUserListByResultMap(queryVo);
 		System.out.println(list.size());
 	}
+	//一级缓存测试
+	@Test
+	public void testCache1(){
+		SqlSession sqlSession=sqlSessionFactory.openSession();
+		//创建UserMapper对象，mybatis自动生成mapper代理对象
+		UserMapper userMapper=sqlSession.getMapper(UserMapper.class);
+		//查询id为1的用户
+		User user1=userMapper.findUserById(1);
+		System.out.println(user1);
+		//更新用户名字
+		user1.setUsername("侯琪");
+		userMapper.updateUser(user1);
+		sqlSession.commit();
+		//再次查询id为1的用户,使用同一个userMapper
+		User user2=userMapper.findUserById(1);
+		System.out.println(user2);
+		sqlSession.close();
+	}
+	//一级缓存测试
+		@Test
+		public void testCache2(){
+			SqlSession sqlSession1=sqlSessionFactory.openSession();
+			SqlSession sqlSession2=sqlSessionFactory.openSession();
+			SqlSession sqlSession3=sqlSessionFactory.openSession();
+			//创建UserMapper对象，mybatis自动生成mapper代理对象
+			UserMapper userMapper1=sqlSession1.getMapper(UserMapper.class);
+			UserMapper userMapper2=sqlSession2.getMapper(UserMapper.class);
+			UserMapper userMapper3=sqlSession3.getMapper(UserMapper.class);
+			//查询id为1的用户
+			User user1=userMapper1.findUserById(1);
+			System.out.println(user1);
+			//要关闭sqlsession1.不然不会把数据存入缓存
+			sqlSession1.close();
+			//更新用户名字
+			User user3=userMapper3.findUserById(1);
+			user3.setUsername("侯琪");
+			userMapper3.updateUser(user3);
+			sqlSession3.commit();
+			sqlSession3.close();
+			//再次查询id为1的用户,使用同一个userMapper
+			User user2=userMapper2.findUserById(1);
+			System.out.println(user2);
+			sqlSession2.close();
+		}
+
 }
